@@ -4,12 +4,14 @@ import openai
 from pydub import AudioSegment
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from dotenv import load_dotenv
 
 # ---------------------------
-# Environment variables
+# Load secrets from .env
 # ---------------------------
-OPENAI_API_KEY = os.environ.get("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")
-TELEGRAM_TOKEN = os.environ.get("8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ")
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 openai.api_key = OPENAI_API_KEY
 
@@ -142,4 +144,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
