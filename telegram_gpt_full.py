@@ -1,73 +1,46 @@
 import os
-import logging
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
 
-# Load environment variables from .env
+# Load secrets from environment
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Setup logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-
-# Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-
-# --- Handlers ---
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Send a welcome message when /start is used"""
-    await update.message.reply_text("🤖 Hello! I’m your AI-powered bot. Ask me anything!")
+    await update.message.reply_text("Hello! 🤖 Send me a message and I’ll reply using GPT.")
 
-
-async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle text messages and reply with OpenAI"""
-    user_message = update.message.text
+# Handle messages
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # or "gpt-4o" if you want richer responses
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_message},
-            ],
+                {"role": "user", "content": user_text}
+            ]
         )
-
-        bot_reply = response.choices[0].message.content
-        await update.message.reply_text(bot_reply)
-
+        reply = response.choices[0].message.content
     except Exception as e:
-        logging.error(f"OpenAI API error: {e}")
-        await update.message.reply_text("⚠️ Sorry, something went wrong.")
+        reply = f"⚠️ Error: {str(e)}"
 
+    await update.message.reply_text(reply)
 
-# --- Main ---
 def main():
-    if not TELEGRAM_TOKEN:
-        raise ValueError("❌ TELEGRAM_TOKEN not found in environment")
-
-    if not OPENAI_API_KEY:
-        raise ValueError("❌ OPENAI_API_KEY not found in environment")
-
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    logging.info("🚀 Bot is running...")
+    print("Bot is running... 🚀")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
