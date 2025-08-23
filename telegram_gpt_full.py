@@ -1,6 +1,6 @@
 import os
 import tempfile
-from openai import OpenAI
+import openai
 from pydub import AudioSegment
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
@@ -8,10 +8,10 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 # ---------------------------
 # Environment variables
 # ---------------------------
-OPENAI_API_KEY = os.environ.get("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")
+OPENAI_API_KEY = os.environ.get("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")
 TELEGRAM_TOKEN = os.environ.get("8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
 USER_MEMORY = {}
 MAX_MEMORY_MESSAGES = 10
@@ -27,6 +27,9 @@ def build_messages_for_user(user_id: int, user_prompt: str):
     history = USER_MEMORY.get(user_id, [])
     return [system] + history + [{"role": "user", "content": user_prompt}]
 
+# ---------------------------
+# Bot Handlers
+# ---------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Habari! Mimi ni bot yako 🤖\n"
@@ -47,13 +50,13 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     messages = build_messages_for_user(user_id, user_text)
 
     try:
-        resp = client.chat.completions.create(
+        resp = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=500,
             temperature=0.7
         )
-        reply = resp.choices[0].message.content.strip()
+        reply = resp["choices"][0]["message"]["content"].strip()
     except Exception as e:
         reply = f"OpenAI error: {e}"
 
@@ -83,11 +86,11 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
             with open(mp3_path, "rb") as audio_file:
-                transcript = client.audio.transcriptions.create(
+                transcript = openai.Audio.transcriptions.create(
                     model="whisper-1",
                     file=audio_file
                 )
-                text = transcript.text
+                text = transcript["text"]
         except Exception as e:
             await update.message.reply_text(f"Transcription error: {e}")
             return
@@ -95,11 +98,11 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     add_to_memory(user_id, "user", text)
     messages = build_messages_for_user(user_id, text)
     try:
-        resp = client.chat.completions.create(
+        resp = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
-        reply = resp.choices[0].message.content.strip()
+        reply = resp["choices"][0]["message"]["content"].strip()
     except Exception as e:
         reply = f"OpenAI error: {e}"
 
@@ -113,16 +116,19 @@ async def image_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prompt = " ".join(context.args)
     await update.message.reply_text("Generating image... ✨")
     try:
-        img_resp = client.images.generate(
-            model="gpt-image-1",
+        img_resp = openai.Image.create(
             prompt=prompt,
+            n=1,
             size="512x512"
         )
-        img_url = img_resp.data[0].url
+        img_url = img_resp["data"][0]["url"]
         await update.message.reply_photo(img_url, caption=f"Image for: {prompt}")
     except Exception as e:
         await update.message.reply_text(f"Image generation error: {e}")
 
+# ---------------------------
+# Main
+# ---------------------------
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -136,3 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
