@@ -1,8 +1,13 @@
 services:
   - type: web
-    name: telegram-bot
+    name: cytrabot
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: ./start.sh
-    
+    region: oregon  # or frankfurt if closer
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "./start.sh"
+    envVars:
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
