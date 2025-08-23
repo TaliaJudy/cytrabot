@@ -3,7 +3,10 @@ services:
     name: telegram-gpt-bot
     env: python
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: |
+      pip install --upgrade pip
+      pip uninstall -y python-telegram-bot
+      pip install -r requirements.txt --force-reinstall
     startCommand: ./start.sh
     envVars:
       - key: TELEGRAM_TOKEN
