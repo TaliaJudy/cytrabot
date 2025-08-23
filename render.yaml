@@ -1,12 +1,8 @@
 services:
-  - type: worker
+  - type: web
     name: telegram-gpt-bot
     env: python
-    plan: free
-    buildCommand: |
-      pip install --upgrade pip
-      pip uninstall -y python-telegram-bot
-      pip install -r requirements.txt --force-reinstall
+    buildCommand: pip install -r requirements.txt
     startCommand: ./start.sh
     envVars:
       - key: TELEGRAM_TOKEN
