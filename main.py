@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from gtts import gTTS
 
-# 🔑 Tokens (replace with your real tokens)
+# 🔑 Replace these with your real keys
 TELEGRAM_TOKEN = "8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ"
 GEMINI_API_KEY = "AIzaSyAN_S9y9C2xi_lYhJz41-uItJedpcDU4_4"
 
@@ -20,12 +20,13 @@ user_modes = {}
 user_langs = {}
 user_contexts = {}
 
-# --- Gemini Text API ---
+# --- Gemini Chat API ---
 def ask_gemini(prompt: str, mode: str = "default") -> str:
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateMessage"
     headers = {"Content-Type": "application/json"}
     params = {"key": GEMINI_API_KEY}
 
+    # Add mode instructions
     if mode == "creative":
         prompt = f"Be very imaginative and creative: {prompt}"
     elif mode == "code":
@@ -33,16 +34,21 @@ def ask_gemini(prompt: str, mode: str = "default") -> str:
     elif mode == "short":
         prompt = f"Answer very briefly: {prompt}"
 
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
+    data = {
+        "messages": [
+            {"author": "user", "content": {"text": prompt}}
+        ]
+    }
+
     response = requests.post(url, headers=headers, params=params, json=data)
     if response.status_code == 200:
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        return response.json()["candidates"][0]["content"][0]["text"]
     else:
         return f"Error: {response.text}"
 
 # --- Gemini Image API ---
 def create_image(prompt: str):
-    url = "https://generativelanguage.googleapis.com/v1beta/models/imagegeneration:generate"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/image-bison-001:generate"
     headers = {"Content-Type": "application/json"}
     params = {"key": GEMINI_API_KEY}
     data = {"prompt": {"text": prompt}}
@@ -65,8 +71,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_modes[user_id] = "default"
     user_langs[user_id] = "en"
     user_contexts[user_id] = []
+
     await update.message.reply_text(
-        "👋 Hello! I'm your Gemini-powered bot.\n\n"
+        "👋 Hi, I'm your Gemini bot! 😁\n\n"
+        "Developed by **Cytra** 🔹 Visit: [waikwa.vercel.app](https://waikwa.vercel.app)\n\n"
         "✨ Features:\n"
         "- `/mode <default|creative|code|short>` → set reply style\n"
         "- `/reset` → clear conversation\n"
@@ -162,9 +170,8 @@ def main():
     # Text message handler
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("✅ Gemini Ultimate Bot running...")
+    print("✅ Gemini Ultimate Bot running on Termux! Developed by Cytra 😁")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
-    
