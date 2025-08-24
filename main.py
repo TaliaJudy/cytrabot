@@ -20,7 +20,7 @@ user_modes = {}
 user_langs = {}
 user_contexts = {}
 
-# --- Gemini Chat API ---
+# --- Gemini Chat API (fixed input field) ---
 def ask_gemini(prompt: str, mode: str = "default") -> str:
     url = "https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateMessage"
     headers = {"Content-Type": "application/json"}
@@ -35,7 +35,7 @@ def ask_gemini(prompt: str, mode: str = "default") -> str:
         prompt = f"Answer very briefly: {prompt}"
 
     data = {
-        "prompt": {
+        "input": {
             "text": prompt
         }
     }
