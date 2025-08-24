@@ -1,178 +1,143 @@
-import logging
-import requests
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from gtts import gTTS
-
-# 🔑 Replace these with your real keys
-TELEGRAM_TOKEN = "8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ"
-GEMINI_API_KEY = "AIzaSyAN_S9y9C2xi_lYhJz41-uItJedpcDU4_4"
-
-# --- Logging ---
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Application, CommandHandler, MessageHandler, CallbackQueryHandler,
+    ContextTypes, filters
 )
-logger = logging.getLogger(__name__)
 
-# --- User state ---
-user_modes = {}
-user_langs = {}
-user_contexts = {}
+TOKEN = "YOUR_BOT_TOKEN"
 
-# --- Gemini Chat API (fixed input field) ---
-def ask_gemini(prompt: str, mode: str = "default") -> str:
-    url = "https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateMessage"
-    headers = {"Content-Type": "application/json"}
-    params = {"key": GEMINI_API_KEY}
+# --- Business Data ---
+BUSINESS_NAME = "Waikwa Business Bot"
+WEBSITE = "https://waikwa.vercel.app"
+PHONE = "+254715155196"
+INSTAGRAM = "https://instagram.com/cytra_k9"
+EMAIL = "jackwaikwa1@gmail.com"
+PAYMENT_INSTRUCTIONS = (
+    "💳 *Payment Options:*\n\n"
+    "📱 M-Pesa: Send payment to +254715155196\n"
+    "🌐 Website: https://waikwa.vercel.app\n"
+    "📧 Email confirmation: jackwaikwa1@gmail.com\n\n"
+    "After payment, please send us a screenshot here."
+)
 
-    # Add mode instructions
-    if mode == "creative":
-        prompt = f"Be very imaginative and creative: {prompt}"
-    elif mode == "code":
-        prompt = f"Answer with clean, well-formatted code only: {prompt}"
-    elif mode == "short":
-        prompt = f"Answer very briefly: {prompt}"
+PRODUCTS = {
+    "Product A": 49,
+    "Product B": 79,
+    "Product C": 120
+}
 
-    data = {
-        "input": {
-            "text": prompt
-        }
-    }
+FAQS = {
+    "What are your working hours?": "⏰ We are open from 9 AM - 6 PM, Mon-Sat.",
+    "Do you provide delivery?": "🚚 Yes, we deliver within 3-5 business days.",
+    "Where are you located?": "📍 We are located at Main Street 123, YourCity."
+}
 
-    response = requests.post(url, headers=headers, params=params, json=data)
-    if response.status_code == 200:
-        return response.json()["candidates"][0]["content"][0]["text"]
-    else:
-        return f"Error: {response.text}"
-
-# --- Gemini Image API ---
-def create_image(prompt: str):
-    url = "https://generativelanguage.googleapis.com/v1beta/models/image-bison-001:generate"
-    headers = {"Content-Type": "application/json"}
-    params = {"key": GEMINI_API_KEY}
-    data = {"prompt": {"text": prompt}}
-
-    response = requests.post(url, headers=headers, params=params, json=data)
-    if response.status_code == 200:
-        img_base64 = response.json()["images"][0]["image"]
-        return img_base64
-    return None
-
-# --- TTS ---
-def text_to_speech(text: str, lang: str = "en", filename: str = "reply.mp3"):
-    tts = gTTS(text=text, lang=lang)
-    tts.save(filename)
-    return filename
-
-# --- Commands ---
+# --- Start ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    user_modes[user_id] = "default"
-    user_langs[user_id] = "en"
-    user_contexts[user_id] = []
-
+    keyboard = [
+        [InlineKeyboardButton("📂 View Products", callback_data="catalog")],
+        [InlineKeyboardButton("🛒 Place Order", callback_data="order")],
+        [InlineKeyboardButton("❓ FAQs", callback_data="faq")],
+        [InlineKeyboardButton("💳 Pay Now", callback_data="pay")],
+        [InlineKeyboardButton("📞 Contact Us", callback_data="contact")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        "👋 Hi, I'm your Gemini bot! 😁\n\n"
-        "Developed by **Cytra** 🔹 Visit: [waikwa.vercel.app](https://waikwa.vercel.app)\n\n"
-        "✨ Features:\n"
-        "- `/mode <default|creative|code|short>` → set reply style\n"
-        "- `/reset` → clear conversation\n"
-        "- `/image <prompt>` → generate an image\n"
-        "- `/lang <code>` → set TTS language (en, hi, es, ar, ja...)\n"
-        "- `/speak <text>` → make me talk\n\n"
-        "Just type any message to start chatting!"
+        f"👋 Welcome to *{BUSINESS_NAME}*! \n\nChoose an option below:",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
     )
 
-async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    user_contexts[user_id] = []
-    await update.message.reply_text("✅ Conversation reset!")
+# --- Catalog ---
+async def catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    catalog_text = "📦 *Our Products:*\n\n"
+    for name, price in PRODUCTS.items():
+        catalog_text += f"➡️ {name} - ${price}\n"
+    await query.edit_message_text(catalog_text, parse_mode="Markdown")
 
-async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if context.args:
-        mode = context.args[0].lower()
-        if mode in ["default", "creative", "code", "short"]:
-            user_modes[user_id] = mode
-            await update.message.reply_text(f"✅ Mode set to *{mode}*.", parse_mode="Markdown")
-        else:
-            await update.message.reply_text("❌ Available modes: default, creative, code, short")
-    else:
-        await update.message.reply_text("Usage: /mode <default|creative|code|short>")
+# --- Order ---
+async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    context.user_data["ordering"] = True
+    await query.edit_message_text("🛒 Please type the product name and quantity (e.g., `Product A 2`).")
 
-async def image_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("Usage: /image <your prompt>")
-        return
-
-    prompt = " ".join(context.args)
-    await update.message.reply_text(f"🎨 Creating image: {prompt}")
-
-    image_base64 = create_image(prompt)
-    if image_base64:
-        await update.message.reply_photo(photo=bytes(image_base64, "utf-8"))
-    else:
-        await update.message.reply_text("❌ Failed to generate image.")
-
-async def set_lang(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if not context.args:
+async def handle_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.user_data.get("ordering"):
+        order_details = update.message.text
+        context.user_data["ordering"] = False
         await update.message.reply_text(
-            "Usage: /lang <code>\nExamples: en (English), hi (Hindi), es (Spanish), ar (Arabic), ja (Japanese)"
+            f"✅ Thank you! We received your order:\n\n{order_details}\n\n"
+            f"Our team will contact you soon at {PHONE}.\n\n"
+            f"Please proceed with payment using '💳 Pay Now' button."
         )
-        return
-    lang_code = context.args[0].lower()
-    try:
-        gTTS("test", lang=lang_code)
-        user_langs[user_id] = lang_code
-        await update.message.reply_text(f"✅ Language set to {lang_code}")
-    except:
-        await update.message.reply_text("❌ Unsupported language code.")
 
-async def speak(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    lang = user_langs.get(user_id, "en")
-    if not context.args:
-        await update.message.reply_text("Usage: /speak <text>")
-        return
-    text = " ".join(context.args)
-    filename = text_to_speech(text, lang)
-    await update.message.reply_voice(voice=open(filename, "rb"))
+# --- FAQ ---
+async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    faq_text = "❓ *Frequently Asked Questions:*\n\n"
+    for q, a in FAQS.items():
+        faq_text += f"➡️ {q}\n{a}\n\n"
+    await query.edit_message_text(faq_text, parse_mode="Markdown")
 
-# --- Handle normal messages ---
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    text = update.message.text
-    mode = user_modes.get(user_id, "default")
-    lang = user_langs.get(user_id, "en")
+# --- Contact Info ---
+async def contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    contact_text = (
+        f"📞 Contact Information:\n\n"
+        f"🌐 Website: {WEBSITE}\n"
+        f"📱 Phone: {PHONE}\n"
+        f"📧 Email: {EMAIL}\n"
+        f"📸 Instagram: {INSTAGRAM}\n"
+    )
+    await query.edit_message_text(contact_text)
 
-    await update.message.reply_text("🤔 Thinking...")
-    reply = ask_gemini(text, mode)
-    await update.message.reply_text(reply)
+# --- Payment Instructions ---
+async def pay(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(PAYMENT_INSTRUCTIONS, parse_mode="Markdown")
 
-    # auto voice reply
-    filename = text_to_speech(reply, lang)
-    await update.message.reply_voice(voice=open(filename, "rb"))
+# --- Admin Broadcast ---
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.from_user.id == 123456789:  # replace with your Telegram ID
+        msg = update.message.text.replace("/broadcast ", "")
+        for user in context.bot_data.get("subscribers", []):
+            try:
+                await context.bot.send_message(chat_id=user, text=f"📢 Announcement:\n{msg}")
+            except:
+                pass
+        await update.message.reply_text("✅ Broadcast sent.")
+    else:
+        await update.message.reply_text("🚫 You are not authorized.")
+
+async def save_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.chat_id
+    if "subscribers" not in context.bot_data:
+        context.bot_data["subscribers"] = []
+    if user_id not in context.bot_data["subscribers"]:
+        context.bot_data["subscribers"].append(user_id)
 
 # --- Main ---
 def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = Application.builder().token(TOKEN).build()
 
-    # Command handlers
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("reset", reset))
-    app.add_handler(CommandHandler("mode", set_mode))
-    app.add_handler(CommandHandler("image", image_command))
-    app.add_handler(CommandHandler("lang", set_lang))
-    app.add_handler(CommandHandler("speak", speak))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_order))
+    app.add_handler(MessageHandler(filters.ALL, save_user))
+    app.add_handler(CallbackQueryHandler(catalog, pattern="catalog"))
+    app.add_handler(CallbackQueryHandler(order, pattern="order"))
+    app.add_handler(CallbackQueryHandler(faq, pattern="faq"))
+    app.add_handler(CallbackQueryHandler(pay, pattern="pay"))
+    app.add_handler(CallbackQueryHandler(contact, pattern="contact"))
 
-    # Text message handler
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    print("✅ Gemini Ultimate Bot running on Termux! Developed by Cytra 😁")
+    print("🤖 Bot running...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
-    
