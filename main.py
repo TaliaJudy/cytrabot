@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 from PIL import Image, ImageDraw, ImageFont
 import io, random, datetime, requests
@@ -73,20 +73,46 @@ async def photo_to_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await photo.get_file()
     file_path = "temp.jpg"
     await file.download_to_drive(file_path)
-    # Placeholder for Telegraph or other upload
-    await update.message.reply_text(f"✅ Photo saved as {file_path} (you can replace with your upload logic)")
+    await update.message.reply_text(f"✅ Photo saved as {file_path} (replace with your upload logic)")
 
 # -----------------------------
-# Placeholder Image Commands
+# Image commands
 # -----------------------------
 async def hwaifu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("💖 Placeholder: Send your own SFW hwaifu image API here.")
+    count = 3
+    if context.args:
+        try:
+            count = int(context.args[0])
+            if count > 10:
+                count = 10
+        except ValueError:
+            await update.message.reply_text("❌ Please provide a valid number")
+            return
+    
+    media_group = []
+    for _ in range(count):
+        try:
+            res = requests.get("https://api.waifu.pics/nsfw/trap")
+            data = res.json()
+            image_url = data.get("url")
+            if image_url:
+                media_group.append(InputMediaPhoto(media=image_url))
+        except:
+            continue
+    
+    if media_group:
+        if len(media_group) == 1:
+            await update.message.reply_photo(photo=media_group[0].media, caption="💖 Here's your hwaifu!")
+        else:
+            await update.message.reply_media_group(media=media_group)
+    else:
+        await update.message.reply_text("❌ Could not fetch any hwaifu images.")
 
 async def nsfw_placeholder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("⚠️ Placeholder: You can add your custom NSFW or private image source here.")
+    await update.message.reply_text("⚠️ Placeholder: Add your own NSFW image source here.")
 
 # -----------------------------
-# Utility / Productivity
+# Utility
 # -----------------------------
 async def time(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -154,7 +180,7 @@ async def faq(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # -----------------------------
-# Menu / Inline Keyboard
+# Menu
 # -----------------------------
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -163,11 +189,11 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🛠 Utility", callback_data="utility")],
         [InlineKeyboardButton("📄 Info", callback_data="info")],
         [InlineKeyboardButton("😂 Fun", callback_data="fun")],
-        [InlineKeyboardButton("💖 Hwaifu Placeholder", callback_data="hwaifu")],
+        [InlineKeyboardButton("💖 Hwaifu", callback_data="hwaifu")],
         [InlineKeyboardButton("⚠️ NSFW Placeholder", callback_data="nsfw")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("📜 Select a category:", reply_markup=reply_markup)
+    await update.message.reply_text("📜 Select a category nassty bitch 🥹:", reply_markup=reply_markup)
 
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -185,9 +211,9 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "fun":
         text = "😂 Fun:\n/joke\n/quote\n/8ball\n/trivia"
     elif data == "hwaifu":
-        text = "https://api.waifu.pics/nsfw/neko"
+        text = "💖 Hwaifu:\nUse /hwaifu to get multiple SFW images (e.g., /hwaifu 5)"
     elif data == "nsfw":
-        text = "https://api.waifu.pics/nsfw/blowjob"
+        text = "⚠️ NSFW Placeholder:\nUse /nsfw_placeholder to add your content"
     await query.edit_message_text(text=text)
 
 # -----------------------------
@@ -214,7 +240,7 @@ def main():
     app.add_handler(CommandHandler("emoji", emoji))
     app.add_handler(MessageHandler(filters.PHOTO, photo_to_url))
     
-    # Placeholders
+    # Image commands
     app.add_handler(CommandHandler("hwaifu", hwaifu))
     app.add_handler(CommandHandler("nsfw_placeholder", nsfw_placeholder))
     
@@ -241,8 +267,9 @@ def main():
     # Start
     app.add_handler(CommandHandler("start", start))
     
-    print("🤖 SuperBot with placeholders is running...")
+    print("🤖 SuperBot with multi-image /hwaifu is running...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+    
