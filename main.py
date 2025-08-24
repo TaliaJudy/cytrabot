@@ -184,7 +184,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "📄 Info:\n/website\n/contact\n/products\n/faq"
     elif data == "fun":
         text = "😂 Fun:\n/joke\n/quote\n/8ball\n/trivia"
-    elif data == "hwaifu"
+    elif data == "hwaifu":
     text = "https://api.waifu.pics/nsfw/neko"
     elif data == "nsfw":
         text = "https://api.waifu.pics/nsfw/blowjob"
