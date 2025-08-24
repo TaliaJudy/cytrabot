@@ -4,7 +4,7 @@ from telegram.ext import (
     ContextTypes, filters
 )
 
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ"
 
 # --- Business Data ---
 BUSINESS_NAME = "Waikwa Business Bot"
