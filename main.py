@@ -4,12 +4,15 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from gtts import gTTS
 
-# 🔑 Tokens (replace these with your real ones)
+# 🔑 Tokens (replace with your real tokens)
 TELEGRAM_TOKEN = "8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ"
 GEMINI_API_KEY = "AIzaSyAN_S9y9C2xi_lYhJz41-uItJedpcDU4_4"
 
 # --- Logging ---
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 # --- User state ---
@@ -107,7 +110,9 @@ async def image_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def set_lang(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if not context.args:
-        await update.message.reply_text("Usage: /lang <code>\nExamples: en (English), hi (Hindi), es (Spanish), ar (Arabic), ja (Japanese)")
+        await update.message.reply_text(
+            "Usage: /lang <code>\nExamples: en (English), hi (Hindi), es (Spanish), ar (Arabic), ja (Japanese)"
+        )
         return
     lang_code = context.args[0].lower()
     try:
@@ -146,12 +151,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Command handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("reset", reset))
     app.add_handler(CommandHandler("mode", set_mode))
     app.add_handler(CommandHandler("image", image_command))
     app.add_handler(CommandHandler("lang", set_lang))
     app.add_handler(CommandHandler("speak", speak))
+
+    # Text message handler
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("✅ Gemini Ultimate Bot running...")
@@ -159,3 +167,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
