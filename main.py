@@ -35,9 +35,9 @@ def ask_gemini(prompt: str, mode: str = "default") -> str:
         prompt = f"Answer very briefly: {prompt}"
 
     data = {
-        "messages": [
-            {"author": "user", "content": {"text": prompt}}
-        ]
+        "prompt": {
+            "text": prompt
+        }
     }
 
     response = requests.post(url, headers=headers, params=params, json=data)
@@ -175,3 +175,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
