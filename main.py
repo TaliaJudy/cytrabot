@@ -185,7 +185,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "fun":
         text = "😂 Fun:\n/joke\n/quote\n/8ball\n/trivia"
     elif data == "hwaifu":
-    text = "https://api.waifu.pics/nsfw/neko"
+        text = "https://api.waifu.pics/nsfw/neko"
     elif data == "nsfw":
         text = "https://api.waifu.pics/nsfw/blowjob"
     await query.edit_message_text(text=text)
