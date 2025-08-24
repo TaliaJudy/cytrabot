@@ -3,7 +3,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from PIL import Image, ImageDraw, ImageFont
 import io, random, datetime, requests
 
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "8407032246:AAFBcewVBGxRRv8P2XKIUaHSXYh6kxvZeiQ"
 
 # -----------------------------
 # Fun / Entertainment
@@ -184,10 +184,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "📄 Info:\n/website\n/contact\n/products\n/faq"
     elif data == "fun":
         text = "😂 Fun:\n/joke\n/quote\n/8ball\n/trivia"
-    elif data == "hwaifu":
-        text = "💖 Hwaifu Placeholder:\nUse /hwaifu to fetch your own API images"
+    elif data == "hwaifu"
+    text = "https://api.waifu.pics/nsfw/neko"
     elif data == "nsfw":
-        text = "⚠️ NSFW Placeholder:\nUse /nsfw_placeholder to fetch your own content"
+        text = "https://api.waifu.pics/nsfw/blowjob"
     await query.edit_message_text(text=text)
 
 # -----------------------------
